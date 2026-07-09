@@ -281,6 +281,7 @@ data "aws_iam_policy_document" "pipeline" {
       "ecr:CompleteLayerUpload",
       "ecr:PutImage",
       "ecr:BatchGetImage",
+      "ecr:BatchDeleteImage",
     ]
     resources = ["*"]
   }

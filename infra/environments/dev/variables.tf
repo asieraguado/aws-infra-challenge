@@ -77,7 +77,7 @@ variable "ecs_desired_count" {
 variable "container_image_tag" {
   description = "Tag for the Docker image to deploy"
   type        = string
-  default     = "1.0.0"
+  default     = "main"
 }
 
 variable "ecs_max_count" {

@@ -47,30 +47,38 @@ jobs:
           docker build \
             -t ${{ steps.login-ecr.outputs.registry }}/${{ env.APP_NAME }}-dev:latest \
             -t ${{ steps.login-ecr.outputs.registry }}/${{ env.APP_NAME }}-dev:${{ github.sha }} \
-            -t ${{ steps.login-ecr.outputs.registry }}/${{ env.APP_NAME }}-dev:1.0.0 \
             ./app
 
-      - name: Check if version tag exists in ECR
-        id: check-tag
-        if: github.ref_name == 'main'
-        run: |
-          TAG_EXISTS=$(aws ecr describe-images \
-            --repository-name ${{ env.APP_NAME }}-dev \
-            --image-ids imageTag=1.0.0 \
-            --region ${{ env.AWS_REGION }} \
-            2>/dev/null && echo "true" || echo "false")
-          echo "tag_exists=$TAG_EXISTS" >> $GITHUB_OUTPUT
+          # Tag with branch name for main / release branches
+          if [ "${{ github.ref_name }}" == "main" ]; then
+            docker tag ${{ steps.login-ecr.outputs.registry }}/${{ env.APP_NAME }}-dev:${{ github.sha }} \
+              ${{ steps.login-ecr.outputs.registry }}/${{ env.APP_NAME }}-dev:main
+          elif [[ "${{ github.ref_name }}" =~ ^release/ ]]; then
+            SEMVER_TAG="${GITHUB_REF_NAME#release/}"
+            docker tag ${{ steps.login-ecr.outputs.registry }}/${{ env.APP_NAME }}-dev:${{ github.sha }} \
+              ${{ steps.login-ecr.outputs.registry }}/${{ env.APP_NAME }}-dev:$SEMVER_TAG
+            echo "semver_tag=$SEMVER_TAG" >> $GITHUB_OUTPUT
+          fi
 
       - name: Push to ECR (main only)
         if: github.ref_name == 'main'
         run: |
+          # Delete mutable tags first (immutable repo requires delete-then-push)
+          aws ecr batch-delete-image \
+            --repository-name ${{ env.APP_NAME }}-dev \
+            --image-ids imageTag=latest imageTag=main \
+            --region ${{ env.AWS_REGION }} \
+            2>/dev/null || true
+
           docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.APP_NAME }}-dev:latest
           docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.APP_NAME }}-dev:${{ github.sha }}
-          if [ "${{ steps.check-tag.outputs.tag_exists }}" == "false" ]; then
-            docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.APP_NAME }}-dev:1.0.0
-          else
-            echo "Tag 1.0.0 already exists — skipping push"
-          fi
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.APP_NAME }}-dev:main
+
+      - name: Push to ECR (release only)
+        if: startsWith(github.ref_name, 'release/')
+        run: |
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.APP_NAME }}-dev:${{ github.sha }}
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.APP_NAME }}-dev:${{ steps.build.outputs.semver_tag }}
 
       - name: Force ECS redeployment (main only)
         if: github.ref_name == 'main'
