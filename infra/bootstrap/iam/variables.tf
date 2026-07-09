@@ -9,7 +9,7 @@ variable "aws_region" {
 }
 
 variable "app_name" {
-  description = "Application name – used as a prefix for policies"
+  description = "Application name - used as a prefix for policies"
   type        = string
   default     = "hello-world"
 }
@@ -32,10 +32,5 @@ variable "github_repo" {
 
 variable "state_bucket_arn" {
   description = "ARN of the S3 bucket for Terraform state"
-  type        = string
-}
-
-variable "locks_table_arn" {
-  description = "ARN of the DynamoDB table for state locking"
   type        = string
 }

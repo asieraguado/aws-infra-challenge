@@ -68,11 +68,6 @@ data "aws_iam_policy_document" "terraform" {
     ]
     resources = ["${var.state_bucket_arn}/*"]
   }
-  statement {
-    effect    = "Allow"
-    actions   = ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:DeleteItem"]
-    resources = [var.locks_table_arn]
-  }
 
   # EC2 / VPC
   statement {
@@ -210,17 +205,6 @@ data "aws_iam_policy_document" "terraform" {
     ]
   }
 
-  # DynamoDB (in case new tables are created in the future)
-  statement {
-    effect = "Allow"
-    actions = [
-      "dynamodb:DescribeTable",
-      "dynamodb:CreateTable",
-      "dynamodb:DeleteTable",
-    ]
-    resources = ["*"]
-  }
-
   # CloudWatch Logs
   statement {
     effect = "Allow"
@@ -297,6 +281,7 @@ data "aws_iam_policy_document" "pipeline" {
       "ecr:CompleteLayerUpload",
       "ecr:PutImage",
       "ecr:BatchGetImage",
+      "ecr:BatchDeleteImage",
     ]
     resources = ["*"]
   }

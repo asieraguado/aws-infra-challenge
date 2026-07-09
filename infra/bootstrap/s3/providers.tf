@@ -1,8 +1,8 @@
 # ---------------------------------------------------------------------------
 # Terraform & provider configuration – bootstrap
 # ---------------------------------------------------------------------------
-# This directory is applied once to create the remote state backend (S3 bucket
-# + DynamoDB table).  After it runs, the environments in infra/ can reference
+# This directory is applied once to create the remote state backend
+# (S3 bucket). After it runs, the environments in infra/ can reference
 # this backend for state storage and locking.
 # ---------------------------------------------------------------------------
 terraform {

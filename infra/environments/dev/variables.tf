@@ -74,6 +74,12 @@ variable "ecs_desired_count" {
   default     = 1
 }
 
+variable "container_image_tag" {
+  description = "Tag for the Docker image to deploy"
+  type        = string
+  default     = "main"
+}
+
 variable "ecs_max_count" {
   description = "Maximum number of tasks when auto-scaling"
   type        = number
