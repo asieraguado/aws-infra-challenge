@@ -1,0 +1,113 @@
+# ---------------------------------------------------------------------------
+# CI/CD Pipeline – trunk-based development
+# ---------------------------------------------------------------------------
+# All branches:   Docker build + Terraform plan
+# Main branch:    + Docker push to ECR + Terraform apply
+# ---------------------------------------------------------------------------
+
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - "**"
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: eu-west-1
+  APP_NAME: hello-world
+
+jobs:
+  # ──────────────────────────────────────────────────────────────────────
+  # Docker – build (all branches) / push to ECR (main only)
+  # ──────────────────────────────────────────────────────────────────────
+  docker:
+    name: Docker build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Docker image
+        id: build
+        run: |
+          docker build \
+            -t ${{ steps.login-ecr.outputs.registry }}/${{ env.APP_NAME }}-dev:latest \
+            -t ${{ steps.login-ecr.outputs.registry }}/${{ env.APP_NAME }}-dev:${{ github.sha }} \
+            ./app
+
+      - name: Push to ECR (main only)
+        if: github.ref_name == 'main'
+        run: |
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.APP_NAME }}-dev:latest
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.APP_NAME }}-dev:${{ github.sha }}
+
+      - name: Force ECS redeployment (main only)
+        if: github.ref_name == 'main'
+        run: |
+          aws ecs update-service \
+            --cluster ${{ env.APP_NAME }}-dev-cluster \
+            --service ${{ env.APP_NAME }}-dev-service \
+            --force-new-deployment \
+            --region ${{ env.AWS_REGION }}
+
+  # ──────────────────────────────────────────────────────────────────────
+  # Terraform – plan (all branches) / apply (main only)
+  # ──────────────────────────────────────────────────────────────────────
+  terraform:
+    name: Terraform plan
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra/environments/dev
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform fmt
+        run: terraform fmt -check -diff
+        continue-on-error: true
+
+      - name: Terraform init
+        run: terraform init
+
+      - name: Terraform validate
+        run: terraform validate
+
+      - name: Terraform plan
+        run: terraform plan -out=tfplan
+
+      # Upload plan artifact for debugging
+      - name: Upload plan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: infra/environments/dev/tfplan
+          retention-days: 7
+
+      - name: Terraform apply (main only)
+        if: github.ref_name == 'main'
+        run: terraform apply -auto-approve tfplan
