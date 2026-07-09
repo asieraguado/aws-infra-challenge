@@ -12,11 +12,11 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "hello-world-dev-tfstate"
-    key            = "dev/terraform.tfstate"
-    region         = "eu-west-1"
-    dynamodb_table = "hello-world-dev-tfstate-locks"
-    encrypt        = true
+    bucket       = "hello-world-dev-tfstate"
+    key          = "dev/terraform.tfstate"
+    region       = "eu-west-1"
+    use_lockfile = true
+    encrypt      = true
   }
 }
 

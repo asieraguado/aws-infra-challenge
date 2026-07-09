@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------------
 
 output "alb_dns_name" {
-  description = "DNS name of the ALB – the app entry point"
+  description = "DNS name of the ALB - the app entry point"
   value       = module.alb.alb_dns_name
 }
 
