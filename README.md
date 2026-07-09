@@ -203,5 +203,5 @@ To configure the pipeline, add `AWS_ROLE_ARN` as a repository secret in GitHub p
 ## AI workflow
 
 This project was built with heavy use of AI. The `AGENTS.md` configuration that guided the AI is committed to the repo. See `AGENTS.md` for the agent persona and rules used during development. 
-- Main Agent: Local agent (VS Code).
-- Main Model: DeepSeek V4 Flash.
+- Agent: GitHub Copilot (local agent).
+- Model: DeepSeek V4 Flash.
