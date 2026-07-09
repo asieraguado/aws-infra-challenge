@@ -1,4 +1,6 @@
 .venv
 .terraform
 .terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
 node_modules

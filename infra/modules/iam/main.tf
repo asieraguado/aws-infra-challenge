@@ -1,9 +1,18 @@
 # ---------------------------------------------------------------------------
-# IAM roles & policies – principle of least privilege
+# IAM module – ECS execution and task roles
 # ---------------------------------------------------------------------------
 
+variable "app_name" {
+  description = "Application name used as a prefix"
+  type        = string
+}
+
+variable "environment" {
+  description = "Deployment environment"
+  type        = string
+}
+
 # ── ECS Task Execution Role ─────────────────────────────────────────────
-# Used by the ECS agent to pull images from ECR and write to CloudWatch.
 resource "aws_iam_role" "ecs_execution" {
   name = "${var.app_name}-${var.environment}-ecs-execution-role"
 
@@ -25,15 +34,12 @@ resource "aws_iam_role" "ecs_execution" {
   }
 }
 
-# Attach the AWS-managed policy for ECS execution (ECR pull + CloudWatch logs)
 resource "aws_iam_role_policy_attachment" "ecs_execution" {
   role       = aws_iam_role.ecs_execution.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-# ── ECS Task Role (the app itself) ─────────────────────────────────────
-# Intentionally empty – this app needs no AWS API calls.
-# If the app later needs to access S3, DynamoDB, etc., add policies here.
+# ── ECS Task Role ───────────────────────────────────────────────────────
 resource "aws_iam_role" "ecs_task" {
   name = "${var.app_name}-${var.environment}-ecs-task-role"
 
@@ -53,4 +59,17 @@ resource "aws_iam_role" "ecs_task" {
   tags = {
     Environment = var.environment
   }
+}
+
+# ---------------------------------------------------------------------------
+# Outputs
+# ---------------------------------------------------------------------------
+output "ecs_execution_role_arn" {
+  description = "ARN of the ECS task execution role"
+  value       = aws_iam_role.ecs_execution.arn
+}
+
+output "ecs_task_role_arn" {
+  description = "ARN of the ECS task role"
+  value       = aws_iam_role.ecs_task.arn
 }

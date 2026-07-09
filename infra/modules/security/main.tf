@@ -1,13 +1,42 @@
 # ---------------------------------------------------------------------------
-# Security groups
+# Security module – ALB and ECS security groups
 # ---------------------------------------------------------------------------
 
+variable "app_name" {
+  description = "Application name used as a prefix"
+  type        = string
+}
+
+variable "environment" {
+  description = "Deployment environment"
+  type        = string
+}
+
+variable "vpc_id" {
+  description = "VPC ID to create SGs in"
+  type        = string
+}
+
+variable "vpc_cidr" {
+  description = "VPC CIDR for restricting ALB egress"
+  type        = string
+}
+
+variable "container_port" {
+  description = "Port the container listens on"
+  type        = number
+}
+
+variable "allowed_ingress_cidrs" {
+  description = "CIDR blocks allowed to reach the ALB"
+  type        = list(string)
+}
+
 # ── ALB Security Group ──────────────────────────────────────────────────
-# Allows HTTP(S) from the internet; egress to the VPC CIDR only.
 resource "aws_security_group" "alb" {
   name        = "${var.app_name}-${var.environment}-alb-sg"
   description = "Controls traffic to the ALB"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = var.vpc_id
 
   tags = {
     Name        = "${var.app_name}-${var.environment}-alb-sg"
@@ -15,7 +44,6 @@ resource "aws_security_group" "alb" {
   }
 }
 
-# Ingress: HTTP from allowed CIDRs — one rule per CIDR
 resource "aws_vpc_security_group_ingress_rule" "alb_http" {
   for_each = toset(var.allowed_ingress_cidrs)
 
@@ -27,7 +55,6 @@ resource "aws_vpc_security_group_ingress_rule" "alb_http" {
   description       = "HTTP from ${each.value}"
 }
 
-# Egress: only to the VPC (reach the containers)
 resource "aws_vpc_security_group_egress_rule" "alb_to_ecs" {
   security_group_id = aws_security_group.alb.id
   cidr_ipv4         = var.vpc_cidr
@@ -38,11 +65,10 @@ resource "aws_vpc_security_group_egress_rule" "alb_to_ecs" {
 }
 
 # ── ECS Security Group ──────────────────────────────────────────────────
-# Only accepts traffic from the ALB security group.
 resource "aws_security_group" "ecs" {
   name        = "${var.app_name}-${var.environment}-ecs-sg"
   description = "Controls traffic to ECS Fargate tasks"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = var.vpc_id
 
   tags = {
     Name        = "${var.app_name}-${var.environment}-ecs-sg"
@@ -50,7 +76,6 @@ resource "aws_security_group" "ecs" {
   }
 }
 
-# Ingress: only from the ALB security group
 resource "aws_vpc_security_group_ingress_rule" "ecs_from_alb" {
   security_group_id            = aws_security_group.ecs.id
   referenced_security_group_id = aws_security_group.alb.id
@@ -60,10 +85,22 @@ resource "aws_vpc_security_group_ingress_rule" "ecs_from_alb" {
   description                  = "Allow traffic only from the ALB"
 }
 
-# Egress: allow all outbound so tasks can pull images and make API calls
 resource "aws_vpc_security_group_egress_rule" "ecs_egress" {
   security_group_id = aws_security_group.ecs.id
   cidr_ipv4         = "0.0.0.0/0"
-  ip_protocol       = "-1" # all traffic
+  ip_protocol       = "-1"
   description       = "Allow all outbound (ECR, API calls, etc.)"
+}
+
+# ---------------------------------------------------------------------------
+# Outputs
+# ---------------------------------------------------------------------------
+output "alb_security_group_id" {
+  description = "ID of the ALB security group"
+  value       = aws_security_group.alb.id
+}
+
+output "ecs_security_group_id" {
+  description = "ID of the ECS security group"
+  value       = aws_security_group.ecs.id
 }

@@ -1,4 +1,38 @@
 # ---------------------------------------------------------------------------
+# Networking module – VPC, subnets, IGW, NAT Gateway, route tables
+# ---------------------------------------------------------------------------
+
+variable "app_name" {
+  description = "Application name used as a prefix"
+  type        = string
+}
+
+variable "environment" {
+  description = "Deployment environment"
+  type        = string
+}
+
+variable "vpc_cidr" {
+  description = "CIDR block for the VPC"
+  type        = string
+}
+
+variable "availability_zones" {
+  description = "List of availability zones"
+  type        = list(string)
+}
+
+variable "public_subnet_cidrs" {
+  description = "CIDR blocks for public subnets"
+  type        = list(string)
+}
+
+variable "private_subnet_cidrs" {
+  description = "CIDR blocks for private subnets"
+  type        = list(string)
+}
+
+# ---------------------------------------------------------------------------
 # VPC
 # ---------------------------------------------------------------------------
 resource "aws_vpc" "main" {
@@ -48,7 +82,7 @@ resource "aws_subnet" "private" {
 }
 
 # ---------------------------------------------------------------------------
-# Internet Gateway – allows public subnets to reach the internet
+# Internet Gateway
 # ---------------------------------------------------------------------------
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
@@ -60,7 +94,7 @@ resource "aws_internet_gateway" "main" {
 }
 
 # ---------------------------------------------------------------------------
-# Elastic IP – for the single NAT Gateway
+# Elastic IP – for the NAT Gateway
 # ---------------------------------------------------------------------------
 resource "aws_eip" "nat" {
   domain = "vpc"
@@ -72,9 +106,7 @@ resource "aws_eip" "nat" {
 }
 
 # ---------------------------------------------------------------------------
-# NAT Gateway – one in a public subnet so private subnets can reach the
-# internet (ECR, OS patches, etc.).  Single-AZ to keep costs low; for
-# production you would add one per AZ.
+# NAT Gateway – single AZ to keep costs low
 # ---------------------------------------------------------------------------
 resource "aws_nat_gateway" "main" {
   allocation_id = aws_eip.nat.id
@@ -89,8 +121,6 @@ resource "aws_nat_gateway" "main" {
 # ---------------------------------------------------------------------------
 # Route tables
 # ---------------------------------------------------------------------------
-
-# Public route table – default route through the Internet Gateway
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
 
@@ -112,7 +142,6 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id
 }
 
-# Private route table – default route through the NAT Gateway
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
 
@@ -132,4 +161,27 @@ resource "aws_route_table_association" "private" {
 
   subnet_id      = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private.id
+}
+
+# ---------------------------------------------------------------------------
+# Outputs
+# ---------------------------------------------------------------------------
+output "vpc_id" {
+  description = "ID of the VPC"
+  value       = aws_vpc.main.id
+}
+
+output "vpc_cidr" {
+  description = "CIDR block of the VPC"
+  value       = aws_vpc.main.cidr_block
+}
+
+output "public_subnet_ids" {
+  description = "IDs of the public subnets"
+  value       = aws_subnet.public[*].id
+}
+
+output "private_subnet_ids" {
+  description = "IDs of the private subnets"
+  value       = aws_subnet.private[*].id
 }

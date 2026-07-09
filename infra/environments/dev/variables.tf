@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------
-# Variables
+# Variables for the dev environment
 # ---------------------------------------------------------------------------
 
 variable "aws_region" {
@@ -9,13 +9,13 @@ variable "aws_region" {
 }
 
 variable "app_name" {
-  description = "Application name – used as a prefix for most resources"
+  description = "Application name - used as a prefix for most resources"
   type        = string
   default     = "hello-world"
 }
 
 variable "environment" {
-  description = "Deployment environment (dev, staging, prod)"
+  description = "Deployment environment"
   type        = string
   default     = "dev"
 }
@@ -27,7 +27,7 @@ variable "vpc_cidr" {
 }
 
 variable "availability_zones" {
-  description = "List of AZs to use (2 is the minimum for HA)"
+  description = "List of AZs to use"
   type        = list(string)
   default     = ["eu-west-1a", "eu-west-1b"]
 }
@@ -45,7 +45,7 @@ variable "private_subnet_cidrs" {
 }
 
 variable "allowed_ingress_cidrs" {
-  description = "CIDR blocks allowed to reach the ALB (default: everywhere)"
+  description = "CIDR blocks allowed to reach the ALB"
   type        = list(string)
   default     = ["0.0.0.0/0"]
 }
@@ -56,18 +56,16 @@ variable "container_port" {
   default     = 3000
 }
 
-# ── Minimal Fargate sizing ──────────────────────────────────────────────
-
 variable "ecs_cpu" {
-  description = "Fargate task CPU units (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html)"
+  description = "Fargate task CPU units"
   type        = string
-  default     = "256" # 0.25 vCPU – smallest available
+  default     = "256"
 }
 
 variable "ecs_memory" {
   description = "Fargate task memory in MiB"
   type        = string
-  default     = "512" # smallest paired with 256 CPU
+  default     = "512"
 }
 
 variable "ecs_desired_count" {
