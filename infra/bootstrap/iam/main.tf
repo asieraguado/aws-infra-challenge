@@ -162,6 +162,7 @@ data "aws_iam_policy_document" "terraform" {
       "ecs:UpdateService",
       "ecs:RunTask",
       "ecs:StopTask",
+      "ecs:TagResource",
     ]
     resources = ["*"]
   }
