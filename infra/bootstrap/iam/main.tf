@@ -171,6 +171,7 @@ data "aws_iam_policy_document" "terraform" {
     effect = "Allow"
     actions = [
       "ecr:DescribeRepositories",
+      "ecr:PutImageTagMutability",
       "ecr:DescribeImages",
       "ecr:GetRepositoryPolicy",
       "ecr:GetLifecyclePolicy",
