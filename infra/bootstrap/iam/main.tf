@@ -88,6 +88,8 @@ data "aws_iam_policy_document" "terraform" {
       "ec2:DescribeSecurityGroupRules",
       "ec2:DescribeNetworkInterfaces",
       "ec2:DescribeAvailabilityZones",
+      "ec2:DescribeVpcAttribute",
+      "ec2:DescribeAddressesAttribute",
       "ec2:CreateVpc",
       "ec2:CreateSubnet",
       "ec2:CreateInternetGateway",
@@ -124,7 +126,11 @@ data "aws_iam_policy_document" "terraform" {
     effect = "Allow"
     actions = [
       "elasticloadbalancing:DescribeLoadBalancers",
+      "elasticloadbalancing:DescribeLoadBalancerAttributes",
       "elasticloadbalancing:DescribeTargetGroups",
+      "elasticloadbalancing:DescribeTargetGroupAttributes",
+      "elasticloadbalancing:DescribeTags",
+      "elasticloadbalancing:DescribeListenerAttributes",
       "elasticloadbalancing:DescribeTargetHealth",
       "elasticloadbalancing:DescribeListeners",
       "elasticloadbalancing:CreateLoadBalancer",
@@ -176,6 +182,7 @@ data "aws_iam_policy_document" "terraform" {
       "ecr:BatchGetImage",
       "ecr:BatchCheckLayerAvailability",
       "ecr:GetDownloadUrlForLayer",
+      "ecr:ListTagsForResource",
     ]
     resources = ["*"]
   }
@@ -222,6 +229,7 @@ data "aws_iam_policy_document" "terraform" {
       "logs:CreateLogGroup",
       "logs:DeleteLogGroup",
       "logs:PutRetentionPolicy",
+      "logs:ListTagsForResource",
     ]
     resources = ["*"]
   }
@@ -236,6 +244,7 @@ data "aws_iam_policy_document" "terraform" {
       "application-autoscaling:DeregisterScalableTarget",
       "application-autoscaling:PutScalingPolicy",
       "application-autoscaling:DeleteScalingPolicy",
+      "application-autoscaling:ListTagsForResource",
     ]
     resources = ["*"]
   }
