@@ -99,7 +99,7 @@ module "ecs" {
   ecs_security_group_id = module.security.ecs_security_group_id
   ecs_execution_role_arn = module.iam.ecs_execution_role_arn
   ecs_task_role_arn     = module.iam.ecs_task_role_arn
-  container_image       = "${module.ecr.repository_url}:latest"
+  container_image       = "${module.ecr.repository_url}:${var.container_image_tag}"
   target_group_arn      = module.alb.target_group_arn
   container_port        = var.container_port
   ecs_cpu               = var.ecs_cpu

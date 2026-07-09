@@ -47,13 +47,30 @@ jobs:
           docker build \
             -t ${{ steps.login-ecr.outputs.registry }}/${{ env.APP_NAME }}-dev:latest \
             -t ${{ steps.login-ecr.outputs.registry }}/${{ env.APP_NAME }}-dev:${{ github.sha }} \
+            -t ${{ steps.login-ecr.outputs.registry }}/${{ env.APP_NAME }}-dev:1.0.0 \
             ./app
+
+      - name: Check if version tag exists in ECR
+        id: check-tag
+        if: github.ref_name == 'main'
+        run: |
+          TAG_EXISTS=$(aws ecr describe-images \
+            --repository-name ${{ env.APP_NAME }}-dev \
+            --image-ids imageTag=1.0.0 \
+            --region ${{ env.AWS_REGION }} \
+            2>/dev/null && echo "true" || echo "false")
+          echo "tag_exists=$TAG_EXISTS" >> $GITHUB_OUTPUT
 
       - name: Push to ECR (main only)
         if: github.ref_name == 'main'
         run: |
           docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.APP_NAME }}-dev:latest
           docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.APP_NAME }}-dev:${{ github.sha }}
+          if [ "${{ steps.check-tag.outputs.tag_exists }}" == "false" ]; then
+            docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.APP_NAME }}-dev:1.0.0
+          else
+            echo "Tag 1.0.0 already exists — skipping push"
+          fi
 
       - name: Force ECS redeployment (main only)
         if: github.ref_name == 'main'
