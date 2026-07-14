@@ -1,12 +1,14 @@
 {
-  "name": "aws-infra-challenge",
+  "name": "devops-technical-assessment",
   "version": "1.0.0",
-  "description": "Simple Node server for the AWS Infrastructure Challenge",
-  "main": "server.js",
+  "description": "Small Node HTTP server for the DevOps / Platform Engineer technical validation.",
+  "main": "src/server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node src/server.js",
+    "test": "node --test"
   },
-  "dependencies": {
-    "express": "^4.18.2"
-  }
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
 }

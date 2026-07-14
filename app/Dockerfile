@@ -9,8 +9,8 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-COPY --from=builder /app/node_modules ./node_modules
-COPY server.js .
+COPY --from=builder /app/* .
+COPY src/server.js .
 
 EXPOSE 3000
 
