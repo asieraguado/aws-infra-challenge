@@ -22,10 +22,38 @@ env:
 
 jobs:
   # ──────────────────────────────────────────────────────────────────────
+  # test – npm test (all branches)
+  # ──────────────────────────────────────────────────────────────────────
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+  # ──────────────────────────────────────────────────────────────────────
   # Docker – build (all branches) / push to ECR (main only)
   # ──────────────────────────────────────────────────────────────────────
   docker:
     name: Docker build
+    needs: [test]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
