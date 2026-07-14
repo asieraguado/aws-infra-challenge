@@ -110,6 +110,8 @@ data "aws_iam_policy_document" "terraform" {
       "ec2:DeleteRoute",
       "ec2:DeleteSecurityGroup",
       "ec2:ModifyVpcAttribute",
+      "ec2:ModifySubnetAttribute",
+      "ec2:CreateTags",
     ]
     # Scope to the dev VPC and its resources – use a wildcard for
     # resource-level control where possible.
@@ -136,9 +138,11 @@ data "aws_iam_policy_document" "terraform" {
       "elasticloadbalancing:DeleteListener",
       "elasticloadbalancing:ModifyLoadBalancerAttributes",
       "elasticloadbalancing:ModifyTargetGroup",
+      "elasticloadbalancing:ModifyTargetGroupAttributes",
       "elasticloadbalancing:ModifyListener",
       "elasticloadbalancing:SetSecurityGroups",
       "elasticloadbalancing:SetSubnets",
+      "elasticloadbalancing:AddTags",
     ]
     resources = ["*"]
   }
@@ -216,6 +220,7 @@ data "aws_iam_policy_document" "terraform" {
       "logs:DeleteLogGroup",
       "logs:PutRetentionPolicy",
       "logs:ListTagsForResource",
+      "logs:TagResource",
     ]
     resources = ["*"]
   }
